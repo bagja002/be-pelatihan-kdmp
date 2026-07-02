@@ -38,3 +38,15 @@ func RegisterPesertaSelfRoutes(api fiber.Router, db *gorm.DB, tm *token.Manager)
 	group.Get("/me", h.GetSelf)
 	group.Put("/me", h.UpdateSelf)
 }
+
+// RegisterPesertaImportRoutes: unggah xlsx (super_admin only).
+func RegisterPesertaImportRoutes(protected fiber.Router, db *gorm.DB) {
+	pesertaRepo := repository.NewPesertaRepository(db)
+	satdikRepo := repository.NewSatdikRepository(db)
+	svc := service.NewPesertaImportService(pesertaRepo, satdikRepo)
+	h := handler.NewPesertaImportHandler(svc)
+
+	// Route-level role check only — a group with RequireRole on the /peserta
+	// prefix would leak the super_admin requirement onto the admin CRUD routes.
+	protected.Post("/peserta/import", middleware.RequireRole("super_admin"), h.Import)
+}

@@ -21,8 +21,10 @@ func RegisterSatdikRoutes(protected fiber.Router, db *gorm.DB) {
 	group.Get("/", h.List)
 	group.Get("/:id", h.GetByID)
 
-	admin := group.Group("", middleware.RequireRole("super_admin"))
-	admin.Post("/", h.Create)
-	admin.Put("/:id", h.Update)
-	admin.Delete("/:id", h.Delete)
+	// Mutations restricted to super_admin via route-level middleware (a nested
+	// group with middleware would leak the role check onto the read routes too).
+	superAdmin := middleware.RequireRole("super_admin")
+	group.Post("/", superAdmin, h.Create)
+	group.Put("/:id", superAdmin, h.Update)
+	group.Delete("/:id", superAdmin, h.Delete)
 }
