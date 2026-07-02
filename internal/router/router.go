@@ -21,6 +21,12 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, tm *token.Manager) {
 	// Authentication endpoints (public).
 	RegisterAuthRoutes(api, db, tm)
 
+	// Peserta public flow: verify NIK -> short-lived token, then self get/update.
+	// Registered on the public group BEFORE the protected /peserta/:id routes so
+	// that the literal /peserta/me is matched for peserta tokens.
+	RegisterPesertaAuthRoutes(api, db, tm)
+	RegisterPesertaSelfRoutes(api, db, tm)
+
 	// Protected group: every route below requires a valid JWT access token.
 	protected := api.Group("", middleware.RequireAuth(tm))
 

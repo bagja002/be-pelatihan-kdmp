@@ -33,17 +33,25 @@ type Manager struct {
 	secret     []byte
 	accessTTL  time.Duration
 	refreshTTL time.Duration
+	pesertaTTL time.Duration
 	issuer     string
 }
 
 // NewManager builds a token Manager.
-func NewManager(secret string, accessTTL, refreshTTL time.Duration, issuer string) *Manager {
+func NewManager(secret string, accessTTL, refreshTTL, pesertaTTL time.Duration, issuer string) *Manager {
 	return &Manager{
 		secret:     []byte(secret),
 		accessTTL:  accessTTL,
 		refreshTTL: refreshTTL,
+		pesertaTTL: pesertaTTL,
 		issuer:     issuer,
 	}
+}
+
+// GeneratePeserta issues a short-lived access token for a peserta session
+// (role "peserta"), used after successful NIK verification.
+func (m *Manager) GeneratePeserta(pesertaID uint) (string, error) {
+	return m.generate(pesertaID, "peserta", Access, m.pesertaTTL)
 }
 
 // AccessTTL exposes the access-token lifetime.

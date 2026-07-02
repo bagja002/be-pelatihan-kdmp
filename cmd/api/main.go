@@ -36,7 +36,7 @@ func main() {
 		log.Fatalf("failed to migrate: %v", err)
 	}
 
-	tm := token.NewManager(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL, "knmp-backend")
+	tm := token.NewManager(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL, cfg.PesertaTokenTTL, "knmp-backend")
 
 	app := fiber.New(fiber.Config{
 		AppName:               "knmp-backend",
