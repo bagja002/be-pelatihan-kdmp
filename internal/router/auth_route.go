@@ -33,7 +33,6 @@ func RegisterAuthRoutes(api fiber.Router, db *gorm.DB, tm *token.Manager) {
 	})
 
 	auth := api.Group("/auth")
-	auth.Post("/register", strict, h.Register)
 	auth.Post("/login", strict, h.Login)
 	auth.Post("/refresh", strict, h.Refresh)
 	auth.Get("/me", middleware.RequireAuth(tm), h.Me)

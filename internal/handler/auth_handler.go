@@ -13,34 +13,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// AuthHandler exposes authentication endpoints.
-type AuthHandler struct {
-	service service.AuthService
-}
+type AuthHandler struct{ service service.AuthService }
 
-// NewAuthHandler builds an AuthHandler.
-func NewAuthHandler(s service.AuthService) *AuthHandler {
-	return &AuthHandler{service: s}
-}
-
-func (h *AuthHandler) Register(c *fiber.Ctx) error {
-	var req dto.RegisterRequest
-	if err := c.BodyParser(&req); err != nil {
-		return response.BadRequest(c, "invalid request body")
-	}
-	if errs := validator.Validate(&req); errs != nil {
-		return response.ValidationError(c, errs)
-	}
-
-	u, err := h.service.Register(&req)
-	if err != nil {
-		if errors.Is(err, service.ErrEmailTaken) {
-			return response.Conflict(c, "email already registered")
-		}
-		return response.InternalError(c, err)
-	}
-	return response.Created(c, "registered", toUserResponse(u))
-}
+func NewAuthHandler(s service.AuthService) *AuthHandler { return &AuthHandler{service: s} }
 
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var req dto.LoginRequest
@@ -50,11 +25,10 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	if errs := validator.Validate(&req); errs != nil {
 		return response.ValidationError(c, errs)
 	}
-
 	tokens, err := h.service.Login(&req)
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidCredentials) {
-			return response.Unauthorized(c, "invalid email or password")
+			return response.Unauthorized(c, "username atau password salah")
 		}
 		return response.InternalError(c, err)
 	}
@@ -69,7 +43,6 @@ func (h *AuthHandler) Refresh(c *fiber.Ctx) error {
 	if errs := validator.Validate(&req); errs != nil {
 		return response.ValidationError(c, errs)
 	}
-
 	tokens, err := h.service.Refresh(req.RefreshToken)
 	if err != nil {
 		return response.Unauthorized(c, "invalid refresh token")
@@ -77,7 +50,6 @@ func (h *AuthHandler) Refresh(c *fiber.Ctx) error {
 	return response.OK(c, "token refreshed", tokens)
 }
 
-// Me returns the profile of the authenticated user (requires RequireAuth).
 func (h *AuthHandler) Me(c *fiber.Ctx) error {
 	userID, _ := c.Locals(middleware.LocalUserID).(uint)
 	u, err := h.service.Profile(userID)
@@ -89,9 +61,10 @@ func (h *AuthHandler) Me(c *fiber.Ctx) error {
 
 func toUserResponse(u *entity.User) dto.UserResponse {
 	return dto.UserResponse{
-		ID:    u.ID,
-		Email: u.Email,
-		Role:  u.Role,
-		Phone: u.Phone,
+		ID:       u.ID,
+		Nama:     u.Nama,
+		Username: u.Username,
+		Type:     u.Type,
+		IDSatdik: u.IDSatdik,
 	}
 }

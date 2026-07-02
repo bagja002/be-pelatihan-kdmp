@@ -1,35 +1,29 @@
 package dto
 
-// RegisterRequest is the payload for account registration.
-type RegisterRequest struct {
-	Email    string `json:"email" validate:"required,email,max=255"`
-	Password string `json:"password" validate:"required,min=8,max=128"`
-	Phone    string `json:"phone" validate:"omitempty,max=32"`
-}
-
-// LoginRequest is the payload for authentication.
+// LoginRequest — login admin/super_admin dengan username.
 type LoginRequest struct {
-	Email    string `json:"email" validate:"required,email"`
+	Username string `json:"username" validate:"required,max=128"`
 	Password string `json:"password" validate:"required"`
 }
 
-// RefreshRequest exchanges a refresh token for a new token pair.
+// RefreshRequest menukar refresh token dengan pasangan token baru.
 type RefreshRequest struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
 }
 
-// TokenResponse is returned on successful login/refresh.
+// TokenResponse dikembalikan saat login/refresh sukses.
 type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	TokenType    string `json:"token_type"`
-	ExpiresIn    int64  `json:"expires_in"` // access token lifetime in seconds
+	ExpiresIn    int64  `json:"expires_in"`
 }
 
-// UserResponse is the safe, serializable view of a user (no password).
+// UserResponse — tampilan aman user (tanpa password).
 type UserResponse struct {
-	ID    uint   `json:"id"`
-	Email string `json:"email"`
-	Role  string `json:"role"`
-	Phone string `json:"phone,omitempty"`
+	ID       uint   `json:"id"`
+	Nama     string `json:"nama"`
+	Username string `json:"username"`
+	Type     string `json:"type"`
+	IDSatdik *uint  `json:"idSatdik"`
 }

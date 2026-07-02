@@ -28,5 +28,6 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, tm *token.Manager) {
 	// Register entity routes below (one line per entity).
 	// Use `protected` to require auth, or `api` for public access.
 	RegisterSatdikRoutes(protected, db)
+	RegisterUserRoutes(protected, db)
 	// ────────────────────────────────────────────────────────────
 }
