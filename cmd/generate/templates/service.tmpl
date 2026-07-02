@@ -1,0 +1,59 @@
+package service
+
+import (
+	"{{.Module}}/internal/dto"
+	"{{.Module}}/internal/entity"
+	"{{.Module}}/internal/repository"
+)
+
+// {{.Name}}Service defines the business logic for {{.Name}}.
+type {{.Name}}Service interface {
+	Create(req *dto.Create{{.Name}}Request) (*entity.{{.Name}}, error)
+	GetAll() ([]entity.{{.Name}}, error)
+	GetByID(id uint) (*entity.{{.Name}}, error)
+	Update(id uint, req *dto.Update{{.Name}}Request) (*entity.{{.Name}}, error)
+	Delete(id uint) error
+}
+
+type {{.VarName}}Service struct {
+	repo repository.{{.Name}}Repository
+}
+
+// New{{.Name}}Service wires a {{.Name}}Service to its repository.
+func New{{.Name}}Service(repo repository.{{.Name}}Repository) {{.Name}}Service {
+	return &{{.VarName}}Service{repo: repo}
+}
+
+func (s *{{.VarName}}Service) Create(req *dto.Create{{.Name}}Request) (*entity.{{.Name}}, error) {
+	e := &entity.{{.Name}}{
+		Name: req.Name,
+	}
+	if err := s.repo.Create(e); err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
+func (s *{{.VarName}}Service) GetAll() ([]entity.{{.Name}}, error) {
+	return s.repo.FindAll()
+}
+
+func (s *{{.VarName}}Service) GetByID(id uint) (*entity.{{.Name}}, error) {
+	return s.repo.FindByID(id)
+}
+
+func (s *{{.VarName}}Service) Update(id uint, req *dto.Update{{.Name}}Request) (*entity.{{.Name}}, error) {
+	e, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	e.Name = req.Name
+	if err := s.repo.Update(e); err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
+func (s *{{.VarName}}Service) Delete(id uint) error {
+	return s.repo.Delete(id)
+}

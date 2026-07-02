@@ -1,0 +1,11 @@
+package dto
+
+// Create{{.Name}}Request is the payload for creating a {{.VarName}}.
+type Create{{.Name}}Request struct {
+	Name string `json:"name" validate:"required,min=1,max=255"`
+}
+
+// Update{{.Name}}Request is the payload for updating a {{.VarName}}.
+type Update{{.Name}}Request struct {
+	Name string `json:"name" validate:"required,min=1,max=255"`
+}

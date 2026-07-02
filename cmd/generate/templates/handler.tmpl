@@ -1,0 +1,87 @@
+package handler
+
+import (
+	"strconv"
+
+	"{{.Module}}/internal/dto"
+	"{{.Module}}/internal/service"
+	"{{.Module}}/pkg/response"
+	"{{.Module}}/pkg/validator"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+// {{.Name}}Handler exposes HTTP handlers for {{.Name}}.
+type {{.Name}}Handler struct {
+	service service.{{.Name}}Service
+}
+
+// New{{.Name}}Handler builds a {{.Name}}Handler.
+func New{{.Name}}Handler(service service.{{.Name}}Service) *{{.Name}}Handler {
+	return &{{.Name}}Handler{service: service}
+}
+
+func (h *{{.Name}}Handler) Create(c *fiber.Ctx) error {
+	var req dto.Create{{.Name}}Request
+	if err := c.BodyParser(&req); err != nil {
+		return response.BadRequest(c, "invalid request body")
+	}
+	if errs := validator.Validate(&req); errs != nil {
+		return response.ValidationError(c, errs)
+	}
+	data, err := h.service.Create(&req)
+	if err != nil {
+		return response.InternalError(c, err)
+	}
+	return response.Created(c, "{{.VarName}} created", data)
+}
+
+func (h *{{.Name}}Handler) List(c *fiber.Ctx) error {
+	data, err := h.service.GetAll()
+	if err != nil {
+		return response.InternalError(c, err)
+	}
+	return response.OK(c, "{{.VarName}} list", data)
+}
+
+func (h *{{.Name}}Handler) GetByID(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return response.BadRequest(c, "invalid id")
+	}
+	data, err := h.service.GetByID(uint(id))
+	if err != nil {
+		return response.NotFound(c, "{{.VarName}} not found")
+	}
+	return response.OK(c, "{{.VarName}} detail", data)
+}
+
+func (h *{{.Name}}Handler) Update(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return response.BadRequest(c, "invalid id")
+	}
+	var req dto.Update{{.Name}}Request
+	if err := c.BodyParser(&req); err != nil {
+		return response.BadRequest(c, "invalid request body")
+	}
+	if errs := validator.Validate(&req); errs != nil {
+		return response.ValidationError(c, errs)
+	}
+	data, err := h.service.Update(uint(id), &req)
+	if err != nil {
+		return response.NotFound(c, "{{.VarName}} not found")
+	}
+	return response.OK(c, "{{.VarName}} updated", data)
+}
+
+func (h *{{.Name}}Handler) Delete(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return response.BadRequest(c, "invalid id")
+	}
+	if err := h.service.Delete(uint(id)); err != nil {
+		return response.InternalError(c, err)
+	}
+	return response.OK(c, "{{.VarName}} deleted", nil)
+}

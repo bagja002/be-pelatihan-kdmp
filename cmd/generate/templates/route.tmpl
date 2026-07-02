@@ -1,0 +1,29 @@
+package router
+
+import (
+	"{{.Module}}/internal/handler"
+	"{{.Module}}/internal/repository"
+	"{{.Module}}/internal/service"
+
+	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
+)
+
+// Register{{.Name}}Routes wires repository -> service -> handler and mounts
+// the /{{.Plural}} route group.
+//
+// To activate, add this single line inside SetupRoutes in router.go:
+//
+//	Register{{.Name}}Routes(api, db)
+func Register{{.Name}}Routes(api fiber.Router, db *gorm.DB) {
+	repo := repository.New{{.Name}}Repository(db)
+	svc := service.New{{.Name}}Service(repo)
+	h := handler.New{{.Name}}Handler(svc)
+
+	group := api.Group("/{{.Plural}}")
+	group.Post("/", h.Create)
+	group.Get("/", h.List)
+	group.Get("/:id", h.GetByID)
+	group.Put("/:id", h.Update)
+	group.Delete("/:id", h.Delete)
+}
