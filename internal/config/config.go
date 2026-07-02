@@ -23,9 +23,10 @@ type Config struct {
 	DBPassword string
 	DBName     string
 
-	JWTSecret     string
-	JWTAccessTTL  time.Duration
-	JWTRefreshTTL time.Duration
+	JWTSecret       string
+	JWTAccessTTL    time.Duration
+	JWTRefreshTTL   time.Duration
+	PesertaTokenTTL time.Duration
 
 	CORSAllowedOrigins string
 
@@ -59,7 +60,7 @@ func Load() (*Config, error) {
 		DBPort:     getEnv("DB_PORT", "3306"),
 		DBUser:     getEnv("DB_USER", "root"),
 		DBPassword: getEnv("DB_PASSWORD", ""),
-		DBName:     getEnv("DB_NAME", "knmp"),
+		DBName:     getEnv("DB_NAME", "data-knmp"),
 
 		JWTSecret:          getEnv("JWT_SECRET", ""),
 		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"),
@@ -67,6 +68,7 @@ func Load() (*Config, error) {
 
 	c.JWTAccessTTL = getDuration("JWT_ACCESS_TTL", 15*time.Minute)
 	c.JWTRefreshTTL = getDuration("JWT_REFRESH_TTL", 7*24*time.Hour)
+	c.PesertaTokenTTL = getDuration("PESERTA_TOKEN_TTL", 30*time.Minute)
 	c.RateLimitMax = getInt("RATE_LIMIT_MAX", 100)
 	c.RateLimitWindow = getDuration("RATE_LIMIT_WINDOW", time.Minute)
 	c.BodyLimit = getInt("BODY_LIMIT_BYTES", 1*1024*1024) // 1 MiB

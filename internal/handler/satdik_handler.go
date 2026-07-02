@@ -11,18 +11,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// ProductHandler exposes HTTP handlers for Product.
-type ProductHandler struct {
-	service service.ProductService
-}
+type SatdikHandler struct{ service service.SatdikService }
 
-// NewProductHandler builds a ProductHandler.
-func NewProductHandler(service service.ProductService) *ProductHandler {
-	return &ProductHandler{service: service}
-}
+func NewSatdikHandler(s service.SatdikService) *SatdikHandler { return &SatdikHandler{service: s} }
 
-func (h *ProductHandler) Create(c *fiber.Ctx) error {
-	var req dto.CreateProductRequest
+func (h *SatdikHandler) Create(c *fiber.Ctx) error {
+	var req dto.CreateSatdikRequest
 	if err := c.BodyParser(&req); err != nil {
 		return response.BadRequest(c, "invalid request body")
 	}
@@ -33,35 +27,35 @@ func (h *ProductHandler) Create(c *fiber.Ctx) error {
 	if err != nil {
 		return response.InternalError(c, err)
 	}
-	return response.Created(c, "product created", data)
+	return response.Created(c, "satdik created", data)
 }
 
-func (h *ProductHandler) List(c *fiber.Ctx) error {
+func (h *SatdikHandler) List(c *fiber.Ctx) error {
 	data, err := h.service.GetAll()
 	if err != nil {
 		return response.InternalError(c, err)
 	}
-	return response.OK(c, "product list", data)
+	return response.OK(c, "satdik list", data)
 }
 
-func (h *ProductHandler) GetByID(c *fiber.Ctx) error {
+func (h *SatdikHandler) GetByID(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
 		return response.BadRequest(c, "invalid id")
 	}
 	data, err := h.service.GetByID(uint(id))
 	if err != nil {
-		return response.NotFound(c, "product not found")
+		return response.NotFound(c, "satdik not found")
 	}
-	return response.OK(c, "product detail", data)
+	return response.OK(c, "satdik detail", data)
 }
 
-func (h *ProductHandler) Update(c *fiber.Ctx) error {
+func (h *SatdikHandler) Update(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
 		return response.BadRequest(c, "invalid id")
 	}
-	var req dto.UpdateProductRequest
+	var req dto.UpdateSatdikRequest
 	if err := c.BodyParser(&req); err != nil {
 		return response.BadRequest(c, "invalid request body")
 	}
@@ -70,12 +64,12 @@ func (h *ProductHandler) Update(c *fiber.Ctx) error {
 	}
 	data, err := h.service.Update(uint(id), &req)
 	if err != nil {
-		return response.NotFound(c, "product not found")
+		return response.NotFound(c, "satdik not found")
 	}
-	return response.OK(c, "product updated", data)
+	return response.OK(c, "satdik updated", data)
 }
 
-func (h *ProductHandler) Delete(c *fiber.Ctx) error {
+func (h *SatdikHandler) Delete(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
 		return response.BadRequest(c, "invalid id")
@@ -83,5 +77,5 @@ func (h *ProductHandler) Delete(c *fiber.Ctx) error {
 	if err := h.service.Delete(uint(id)); err != nil {
 		return response.InternalError(c, err)
 	}
-	return response.OK(c, "product deleted", nil)
+	return response.OK(c, "satdik deleted", nil)
 }
