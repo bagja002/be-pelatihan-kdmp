@@ -74,7 +74,11 @@ func TestRowToPesertaFallbackWilayah(t *testing.T) {
 }
 
 func TestRowToPesertaNIKKosong(t *testing.T) {
-	if _, err := RowToPeserta(map[string]string{"nama": "X"}); err == nil {
-		t.Fatal("expected error untuk NIK kosong")
+	p, err := RowToPeserta(map[string]string{"nama": "X"})
+	if err != nil {
+		t.Fatalf("tidak boleh error untuk NIK kosong: %v", err)
+	}
+	if p.NIK != NIKPlaceholder {
+		t.Errorf("NIK kosong harus jadi %q, dapat %q", NIKPlaceholder, p.NIK)
 	}
 }

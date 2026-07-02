@@ -3,14 +3,14 @@
 package importer
 
 import (
-	"errors"
 	"strings"
 
 	"knmp-backend/internal/entity"
 )
 
-// ErrNIKKosong dikembalikan bila baris tidak punya NIK.
-var ErrNIKKosong = errors.New("nik kosong")
+// NIKPlaceholder dipakai untuk baris yang NIK-nya kosong di berkas — datanya
+// tetap dimasukkan, hanya NIK-nya ditandai dengan nilai ini.
+const NIKPlaceholder = "00000000"
 
 // NormalizeHeader menyamakan header: trim, lowercase, buang spasi.
 func NormalizeHeader(s string) string {
@@ -66,7 +66,7 @@ func get(row map[string]string, keys ...string) string {
 func RowToPeserta(row map[string]string) (*entity.DataPeserta, error) {
 	nik := get(row, "nik")
 	if nik == "" {
-		return nil, ErrNIKKosong
+		nik = NIKPlaceholder
 	}
 	p := &entity.DataPeserta{
 		Nama:                get(row, "nama"),
