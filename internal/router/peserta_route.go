@@ -23,11 +23,21 @@ func newPesertaHandler(db *gorm.DB) *handler.PesertaHandler {
 func RegisterPesertaAdminRoutes(protected fiber.Router, db *gorm.DB) {
 	h := newPesertaHandler(db)
 	group := protected.Group("/peserta")
-	group.Get("/", h.List)
-	group.Post("/", h.Create)
-	group.Get("/:id", h.GetByID)
-	group.Put("/:id", h.Update)
-	group.Delete("/:id", h.Delete)
+
+	// SECURITY: enforce an operator role on every CRUD route. Without this a
+	// peserta-role token (role="peserta", uid=peserta.ID) passes RequireAuth
+	// and reaches the scope logic, which does users.FindByID(uid). Because user
+	// and peserta ids are independent auto-increment sequences that overlap, a
+	// peserta could inherit a User's scope — a peserta whose id collides with
+	// the super_admin (id 1) would gain full cross-satdik access. The check is
+	// attached PER ROUTE (not on the group) so it does not leak onto the
+	// separately-registered public /peserta/me self routes.
+	adminOnly := middleware.RequireRole("super_admin", "admin")
+	group.Get("/", adminOnly, h.List)
+	group.Post("/", adminOnly, h.Create)
+	group.Get("/:id", adminOnly, h.GetByID)
+	group.Put("/:id", adminOnly, h.Update)
+	group.Delete("/:id", adminOnly, h.Delete)
 }
 
 // RegisterPesertaSelfRoutes: peserta mengambil & meng-update datanya sendiri.
