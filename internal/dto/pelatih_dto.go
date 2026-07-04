@@ -1,0 +1,11 @@
+package dto
+
+// RegisterPelatihRequest — field teks dari form registrasi mandiri.
+// Berkas (CV & sertifikat) diambil terpisah dari multipart form oleh handler.
+type RegisterPelatihRequest struct {
+	NamaLengkap string `json:"namaLengkap" validate:"required,max=255"`
+	NIP         string `json:"nip" validate:"required,max=64"`
+	Pendidikan  string `json:"pendidikan" validate:"omitempty,max=128"`
+	UnitKerja   string `json:"unitKerja" validate:"omitempty,max=255"`
+	Jabatan     string `json:"jabatan" validate:"omitempty,max=128"`
+}
