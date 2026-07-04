@@ -34,8 +34,11 @@ func TestValidate(t *testing.T) {
 	if err := s.Validate("cv.pdf", 50); err != nil {
 		t.Errorf("pdf 50B harus valid, dapat: %v", err)
 	}
-	if err := s.Validate("foto.PNG", 50); err != nil {
-		t.Errorf("PNG (case-insensitive) harus valid, dapat: %v", err)
+	if err := s.Validate("CV.PDF", 50); err != nil {
+		t.Errorf("PDF (case-insensitive) harus valid, dapat: %v", err)
+	}
+	if err := s.Validate("foto.png", 50); err != ErrFileType {
+		t.Errorf("png sekarang ditolak (hanya PDF), dapat: %v", err)
 	}
 	if err := s.Validate("virus.exe", 50); err != ErrFileType {
 		t.Errorf("exe harus ErrFileType, dapat: %v", err)

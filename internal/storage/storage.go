@@ -19,11 +19,9 @@ var (
 	ErrFileTooLarge = errors.New("ukuran berkas melebihi batas")
 )
 
+// Hanya PDF yang diizinkan untuk semua berkas (CV & sertifikat).
 var allowedExt = map[string]bool{
-	".pdf":  true,
-	".jpg":  true,
-	".jpeg": true,
-	".png":  true,
+	".pdf": true,
 }
 
 type Store struct {

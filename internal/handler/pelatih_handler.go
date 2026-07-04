@@ -2,7 +2,9 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 
 	"knmp-backend/internal/dto"
 	"knmp-backend/internal/repository"
@@ -12,6 +14,7 @@ import (
 	"knmp-backend/pkg/validator"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/xuri/excelize/v2"
 )
 
 type PelatihHandler struct {
@@ -31,8 +34,11 @@ func (h *PelatihHandler) Register(c *fiber.Ctx) error {
 		NamaLengkap: c.FormValue("namaLengkap"),
 		NIP:         c.FormValue("nip"),
 		Pendidikan:  c.FormValue("pendidikan"),
+		Jurusan:     c.FormValue("jurusan"),
+		Universitas: c.FormValue("universitas"),
 		UnitKerja:   c.FormValue("unitKerja"),
 		Jabatan:     c.FormValue("jabatan"),
+		Golongan:    c.FormValue("golongan"),
 	}
 	if errs := validator.Validate(&req); errs != nil {
 		return response.ValidationError(c, errs)
@@ -42,8 +48,11 @@ func (h *PelatihHandler) Register(c *fiber.Ctx) error {
 		NamaLengkap: req.NamaLengkap,
 		NIP:         req.NIP,
 		Pendidikan:  req.Pendidikan,
+		Jurusan:     req.Jurusan,
+		Universitas: req.Universitas,
 		UnitKerja:   req.UnitKerja,
 		Jabatan:     req.Jabatan,
+		Golongan:    req.Golongan,
 	}
 
 	// CV opsional.
@@ -73,7 +82,7 @@ func (h *PelatihHandler) Register(c *fiber.Ctx) error {
 		case errors.Is(err, service.ErrNIPExists):
 			return response.Conflict(c, "NIP sudah terdaftar")
 		case errors.Is(err, storage.ErrFileType):
-			return response.BadRequest(c, "tipe berkas tidak diizinkan (hanya PDF/JPG/PNG)")
+			return response.BadRequest(c, "tipe berkas tidak diizinkan (hanya PDF)")
 		case errors.Is(err, storage.ErrFileTooLarge):
 			return response.BadRequest(c, "ukuran berkas melebihi batas")
 		default:
@@ -127,6 +136,66 @@ func (h *PelatihHandler) DownloadCV(c *fiber.Ctx) error {
 		return response.NotFound(c, "CV tidak ada")
 	}
 	return c.Download(h.store.Path(p.CV))
+}
+
+// Export menghasilkan berkas Excel (.xlsx) berisi seluruh data pelatih.
+func (h *PelatihHandler) Export(c *fiber.Ctx) error {
+	list, err := h.service.List()
+	if err != nil {
+		return response.InternalError(c, err)
+	}
+
+	f := excelize.NewFile()
+	defer f.Close()
+	const sheet = "Pelatih"
+	f.SetSheetName("Sheet1", sheet)
+
+	headers := []string{
+		"No", "Nama Lengkap", "NIP", "Pendidikan Terakhir", "Jurusan",
+		"Universitas", "Unit Kerja", "Jabatan", "Golongan",
+		"Jumlah Sertifikat", "Daftar Sertifikat", "Link CV", "Link Sertifikat",
+	}
+	for i, hd := range headers {
+		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
+		_ = f.SetCellValue(sheet, cell, hd)
+	}
+
+	baseURL := c.BaseURL() // mis. http://localhost:8000
+
+	for r, p := range list {
+		row := r + 2
+		namaSert := make([]string, 0, len(p.Sertifikat))
+		sertLinks := make([]string, 0, len(p.Sertifikat))
+		for _, s := range p.Sertifikat {
+			namaSert = append(namaSert, s.NamaSertifikat)
+			if s.Berkas != "" {
+				sertLinks = append(sertLinks, fmt.Sprintf("%s: %s/api/v1/pelatih/sertifikat/%d/berkas", s.NamaSertifikat, baseURL, s.ID))
+			}
+		}
+		cvLink := ""
+		if p.CV != "" {
+			cvLink = fmt.Sprintf("%s/api/v1/pelatih/%d/cv", baseURL, p.ID)
+		}
+		vals := []interface{}{
+			r + 1, p.NamaLengkap, p.NIP, p.Pendidikan, p.Jurusan,
+			p.Universitas, p.UnitKerja, p.Jabatan, p.Golongan,
+			len(p.Sertifikat), strings.Join(namaSert, ", "),
+			cvLink, strings.Join(sertLinks, "\n"),
+		}
+		for i, v := range vals {
+			cell, _ := excelize.CoordinatesToCellName(i+1, row)
+			_ = f.SetCellValue(sheet, cell, v)
+		}
+	}
+
+	buf, err := f.WriteToBuffer()
+	if err != nil {
+		return response.InternalError(c, err)
+	}
+	c.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Set("Content-Disposition", `attachment; filename="data-pelatih-sdm.xlsx"`)
+	c.Set("Cache-Control", "no-store")
+	return c.Send(buf.Bytes())
 }
 
 func (h *PelatihHandler) DownloadSertifikat(c *fiber.Ctx) error {
