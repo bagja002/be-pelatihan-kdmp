@@ -35,6 +35,10 @@ type Config struct {
 
 	BodyLimit int
 
+	// Upload berkas (CV & sertifikat pelatih).
+	UploadDir      string
+	MaxUploadBytes int64
+
 	// EncryptionKey is the 32-byte AES-256 key used for field-level encryption.
 	EncryptionKey []byte
 }
@@ -71,7 +75,9 @@ func Load() (*Config, error) {
 	c.PesertaTokenTTL = getDuration("PESERTA_TOKEN_TTL", 30*time.Minute)
 	c.RateLimitMax = getInt("RATE_LIMIT_MAX", 100)
 	c.RateLimitWindow = getDuration("RATE_LIMIT_WINDOW", time.Minute)
-	c.BodyLimit = getInt("BODY_LIMIT_BYTES", 1*1024*1024) // 1 MiB
+	c.BodyLimit = getInt("BODY_LIMIT_BYTES", 20*1024*1024) // 20 MiB (muat CV + sertifikat)
+	c.UploadDir = getEnv("UPLOAD_DIR", "./uploads")
+	c.MaxUploadBytes = int64(getInt("MAX_UPLOAD_BYTES", 5*1024*1024)) // 5 MiB per berkas
 
 	if err := c.resolveSecrets(); err != nil {
 		return nil, err
