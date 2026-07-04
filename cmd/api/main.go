@@ -7,6 +7,7 @@ import (
 	"knmp-backend/internal/config"
 	"knmp-backend/internal/database"
 	"knmp-backend/internal/router"
+	"knmp-backend/internal/storage"
 	"knmp-backend/pkg/crypto"
 	"knmp-backend/pkg/response"
 	"knmp-backend/pkg/token"
@@ -83,7 +84,8 @@ func main() {
 		},
 	}))
 
-	router.SetupRoutes(app, db, tm)
+	store := storage.New(cfg.UploadDir, cfg.MaxUploadBytes)
+	router.SetupRoutes(app, db, tm, store)
 
 	addr := ":" + cfg.AppPort
 	log.Printf("server (%s) listening on %s", cfg.AppEnv, addr)
