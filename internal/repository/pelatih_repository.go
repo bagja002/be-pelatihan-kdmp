@@ -6,6 +6,7 @@ import (
 
 	"knmp-backend/internal/entity"
 
+	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -78,5 +79,12 @@ func (r *pelatihRepository) FindSertifikat(id uint) (*entity.SertifikatKeahlian,
 
 // IsDuplicateNIP mengenali error unique-constraint MySQL (kode 1062).
 func IsDuplicateNIP(err error) bool {
-	return err != nil && strings.Contains(err.Error(), "Duplicate entry")
+	if err == nil {
+		return false
+	}
+	var myErr *mysql.MySQLError
+	if errors.As(err, &myErr) {
+		return myErr.Number == 1062
+	}
+	return strings.Contains(err.Error(), "Duplicate entry")
 }

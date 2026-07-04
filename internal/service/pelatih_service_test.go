@@ -13,9 +13,13 @@ import (
 
 // fakePelatihRepo mengimplementasikan repository.PelatihRepository untuk test.
 type fakePelatihRepo struct {
-	exists    bool
-	createErr error
-	created   *entity.Pelatih
+	exists     bool
+	createErr  error
+	created    *entity.Pelatih
+	findResult *entity.Pelatih
+	findErr    error
+	deleted    bool
+	deleteErr  error
 }
 
 func (f *fakePelatihRepo) ExistsNIP(string) (bool, error) { return f.exists, nil }
@@ -28,9 +32,15 @@ func (f *fakePelatihRepo) Create(p *entity.Pelatih) error {
 }
 func (f *fakePelatihRepo) FindAll() ([]entity.Pelatih, error) { return nil, nil }
 func (f *fakePelatihRepo) FindByID(uint) (*entity.Pelatih, error) {
-	return nil, nil
+	return f.findResult, f.findErr
 }
-func (f *fakePelatihRepo) Delete(uint) error { return nil }
+func (f *fakePelatihRepo) Delete(uint) error {
+	if f.deleteErr != nil {
+		return f.deleteErr
+	}
+	f.deleted = true
+	return nil
+}
 func (f *fakePelatihRepo) FindSertifikat(uint) (*entity.SertifikatKeahlian, error) {
 	return nil, nil
 }
@@ -120,5 +130,40 @@ func TestRegister_CreateGagal_BersihkanBerkas(t *testing.T) {
 	}
 	if n := countFiles(t, root+"/pelatih"); n != 0 {
 		t.Errorf("berkas harus dibersihkan saat Create gagal, dapat %d", n)
+	}
+}
+
+func TestDelete_MenghapusBerkas(t *testing.T) {
+	root := t.TempDir()
+	store := storage.New(root, 1<<20)
+
+	cvPath, err := store.Save(fileHeader(t, "cv.pdf", []byte("cv")), "pelatih")
+	if err != nil {
+		t.Fatalf("Save CV: %v", err)
+	}
+	certPath, err := store.Save(fileHeader(t, "k3.pdf", []byte("k3")), "pelatih")
+	if err != nil {
+		t.Fatalf("Save sertifikat: %v", err)
+	}
+
+	repo := &fakePelatihRepo{
+		findResult: &entity.Pelatih{
+			ID: 1,
+			CV: cvPath,
+			Sertifikat: []entity.SertifikatKeahlian{
+				{ID: 1, IDPelatih: 1, NamaSertifikat: "Ahli K3", Berkas: certPath},
+			},
+		},
+	}
+	svc := NewPelatihService(repo, store)
+
+	if err := svc.Delete(1); err != nil {
+		t.Fatalf("Delete: %v", err)
+	}
+	if !repo.deleted {
+		t.Error("repo.Delete harus dipanggil")
+	}
+	if n := countFiles(t, root+"/pelatih"); n != 0 {
+		t.Errorf("berkas harus terhapus dari disk, dapat %d tersisa", n)
 	}
 }

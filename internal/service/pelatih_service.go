@@ -114,7 +114,21 @@ func (s *pelatihService) List() ([]entity.Pelatih, error) { return s.repo.FindAl
 
 func (s *pelatihService) Get(id uint) (*entity.Pelatih, error) { return s.repo.FindByID(id) }
 
-func (s *pelatihService) Delete(id uint) error { return s.repo.Delete(id) }
+func (s *pelatihService) Delete(id uint) error {
+	p, err := s.repo.FindByID(id)
+	if err != nil {
+		return err
+	}
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+	// Best-effort cleanup berkas di disk (abaikan error bila berkas sudah tiada).
+	_ = s.store.Remove(p.CV)
+	for _, c := range p.Sertifikat {
+		_ = s.store.Remove(c.Berkas)
+	}
+	return nil
+}
 
 func (s *pelatihService) Sertifikat(id uint) (*entity.SertifikatKeahlian, error) {
 	return s.repo.FindSertifikat(id)
