@@ -26,6 +26,7 @@ type RegisterPelatihInput struct {
 	UnitKerja   string
 	Jabatan     string
 	Golongan    string
+	Kriteria    string
 	CV          *multipart.FileHeader // opsional
 	Sertifikat  []CertUpload
 }
@@ -100,6 +101,7 @@ func (s *pelatihService) Register(in RegisterPelatihInput) (*entity.Pelatih, err
 		UnitKerja:   in.UnitKerja,
 		Jabatan:     in.Jabatan,
 		Golongan:    in.Golongan,
+		Kriteria:    in.Kriteria,
 		CV:          cvPath,
 		Status:      "baru",
 		Sertifikat:  certs,

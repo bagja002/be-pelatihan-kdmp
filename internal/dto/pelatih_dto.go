@@ -11,4 +11,5 @@ type RegisterPelatihRequest struct {
 	UnitKerja   string `json:"unitKerja" validate:"omitempty,max=255"`
 	Jabatan     string `json:"jabatan" validate:"omitempty,max=128"`
 	Golongan    string `json:"golongan" validate:"omitempty,max=16"`
+	Kriteria    string `json:"kriteria" validate:"omitempty,max=16"`
 }
