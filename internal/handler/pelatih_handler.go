@@ -40,6 +40,7 @@ func (h *PelatihHandler) Register(c *fiber.Ctx) error {
 		Jabatan:     c.FormValue("jabatan"),
 		Golongan:    c.FormValue("golongan"),
 		Kriteria:    c.FormValue("kriteria"),
+		LokasiTOT:   c.FormValue("lokasiTot"),
 	}
 	if errs := validator.Validate(&req); errs != nil {
 		return response.ValidationError(c, errs)
@@ -55,6 +56,7 @@ func (h *PelatihHandler) Register(c *fiber.Ctx) error {
 		Jabatan:     req.Jabatan,
 		Golongan:    req.Golongan,
 		Kriteria:    req.Kriteria,
+		LokasiTOT:   req.LokasiTOT,
 	}
 
 	// CV opsional.
@@ -154,7 +156,7 @@ func (h *PelatihHandler) Export(c *fiber.Ctx) error {
 
 	headers := []string{
 		"No", "Nama Lengkap", "NIP", "Pendidikan Terakhir", "Jurusan",
-		"Universitas", "Unit Kerja", "Jabatan", "Golongan", "Kriteria",
+		"Universitas", "Unit Kerja", "Jabatan", "Golongan", "Kriteria", "Lokasi TOT",
 		"Jumlah Sertifikat", "Daftar Sertifikat", "Link CV", "Link Sertifikat",
 	}
 	for i, hd := range headers {
@@ -180,7 +182,7 @@ func (h *PelatihHandler) Export(c *fiber.Ctx) error {
 		}
 		vals := []interface{}{
 			r + 1, p.NamaLengkap, p.NIP, p.Pendidikan, p.Jurusan,
-			p.Universitas, p.UnitKerja, p.Jabatan, p.Golongan, p.Kriteria,
+			p.Universitas, p.UnitKerja, p.Jabatan, p.Golongan, p.Kriteria, p.LokasiTOT,
 			len(p.Sertifikat), strings.Join(namaSert, ", "),
 			cvLink, strings.Join(sertLinks, "\n"),
 		}

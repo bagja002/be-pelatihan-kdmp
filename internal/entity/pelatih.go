@@ -19,7 +19,8 @@ type Pelatih struct {
 	UnitKerja   string `gorm:"type:varchar(255)" json:"unitKerja"`
 	Jabatan     string `gorm:"type:varchar(128)" json:"jabatan"`
 	Golongan    string `gorm:"type:varchar(16)" json:"golongan"`      // golongan PNS, mis. III/a
-	Kriteria    string `gorm:"type:varchar(16)" json:"kriteria"`      // Expert | KKP | Non KKP
+	Kriteria    string `gorm:"type:varchar(16)" json:"kriteria"`       // Expert | KKP | Non KKP
+	LokasiTOT   string `gorm:"column:lokasi_tot;type:varchar(255)" json:"lokasiTot"`
 	CV          string `gorm:"column:cv;type:varchar(512)" json:"cv"` // path relatif berkas CV
 	Status      string `gorm:"type:varchar(32)" json:"status,omitempty"`
 
