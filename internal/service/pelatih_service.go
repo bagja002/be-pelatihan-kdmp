@@ -18,18 +18,19 @@ type CertUpload struct {
 }
 
 type RegisterPelatihInput struct {
-	NamaLengkap string
-	NIP         string
-	Pendidikan  string
-	Jurusan     string
-	Universitas string
-	UnitKerja   string
-	Jabatan     string
-	Golongan    string
-	Kriteria    string
-	LokasiTOT   string
-	CV          *multipart.FileHeader // opsional
-	Sertifikat  []CertUpload
+	NamaLengkap  string
+	NIP          string
+	Pendidikan   string
+	Jurusan      string
+	Universitas  string
+	UnitKerja    string
+	Jabatan      string
+	Golongan     string
+	Kriteria     string
+	LokasiTOT    string
+	KelasJabatan string
+	CV           *multipart.FileHeader // opsional
+	Sertifikat   []CertUpload
 }
 
 type PelatihService interface {
@@ -94,19 +95,20 @@ func (s *pelatihService) Register(in RegisterPelatihInput) (*entity.Pelatih, err
 	}
 
 	p := &entity.Pelatih{
-		NamaLengkap: in.NamaLengkap,
-		NIP:         in.NIP,
-		Pendidikan:  in.Pendidikan,
-		Jurusan:     in.Jurusan,
-		Universitas: in.Universitas,
-		UnitKerja:   in.UnitKerja,
-		Jabatan:     in.Jabatan,
-		Golongan:    in.Golongan,
-		Kriteria:    in.Kriteria,
-		LokasiTOT:   in.LokasiTOT,
-		CV:          cvPath,
-		Status:      "baru",
-		Sertifikat:  certs,
+		NamaLengkap:  in.NamaLengkap,
+		NIP:          in.NIP,
+		Pendidikan:   in.Pendidikan,
+		Jurusan:      in.Jurusan,
+		Universitas:  in.Universitas,
+		UnitKerja:    in.UnitKerja,
+		Jabatan:      in.Jabatan,
+		Golongan:     in.Golongan,
+		Kriteria:     in.Kriteria,
+		LokasiTOT:    in.LokasiTOT,
+		KelasJabatan: in.KelasJabatan,
+		CV:           cvPath,
+		Status:       "baru",
+		Sertifikat:   certs,
 	}
 
 	// 3. Simpan ke DB. Bila gagal (mis. race pada unique NIP), bersihkan berkas.

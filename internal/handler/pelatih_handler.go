@@ -31,32 +31,34 @@ func NewPelatihHandler(s service.PelatihService, store *storage.Store) *PelatihH
 // Berkas: cv (satu), sertifikat[] (banyak) + sertifikatNama[] (paralel indeks).
 func (h *PelatihHandler) Register(c *fiber.Ctx) error {
 	req := dto.RegisterPelatihRequest{
-		NamaLengkap: c.FormValue("namaLengkap"),
-		NIP:         c.FormValue("nip"),
-		Pendidikan:  c.FormValue("pendidikan"),
-		Jurusan:     c.FormValue("jurusan"),
-		Universitas: c.FormValue("universitas"),
-		UnitKerja:   c.FormValue("unitKerja"),
-		Jabatan:     c.FormValue("jabatan"),
-		Golongan:    c.FormValue("golongan"),
-		Kriteria:    c.FormValue("kriteria"),
-		LokasiTOT:   c.FormValue("lokasiTot"),
+		NamaLengkap:  c.FormValue("namaLengkap"),
+		NIP:          c.FormValue("nip"),
+		Pendidikan:   c.FormValue("pendidikan"),
+		Jurusan:      c.FormValue("jurusan"),
+		Universitas:  c.FormValue("universitas"),
+		UnitKerja:    c.FormValue("unitKerja"),
+		Jabatan:      c.FormValue("jabatan"),
+		Golongan:     c.FormValue("golongan"),
+		Kriteria:     c.FormValue("kriteria"),
+		LokasiTOT:    c.FormValue("lokasiTot"),
+		KelasJabatan: c.FormValue("kelasJabatan"),
 	}
 	if errs := validator.Validate(&req); errs != nil {
 		return response.ValidationError(c, errs)
 	}
 
 	in := service.RegisterPelatihInput{
-		NamaLengkap: req.NamaLengkap,
-		NIP:         req.NIP,
-		Pendidikan:  req.Pendidikan,
-		Jurusan:     req.Jurusan,
-		Universitas: req.Universitas,
-		UnitKerja:   req.UnitKerja,
-		Jabatan:     req.Jabatan,
-		Golongan:    req.Golongan,
-		Kriteria:    req.Kriteria,
-		LokasiTOT:   req.LokasiTOT,
+		NamaLengkap:  req.NamaLengkap,
+		NIP:          req.NIP,
+		Pendidikan:   req.Pendidikan,
+		Jurusan:      req.Jurusan,
+		Universitas:  req.Universitas,
+		UnitKerja:    req.UnitKerja,
+		Jabatan:      req.Jabatan,
+		Golongan:     req.Golongan,
+		Kriteria:     req.Kriteria,
+		LokasiTOT:    req.LokasiTOT,
+		KelasJabatan: req.KelasJabatan,
 	}
 
 	// CV opsional.
@@ -156,7 +158,7 @@ func (h *PelatihHandler) Export(c *fiber.Ctx) error {
 
 	headers := []string{
 		"No", "Nama Lengkap", "NIP", "Pendidikan Terakhir", "Jurusan",
-		"Universitas", "Unit Kerja", "Jabatan", "Golongan", "Kriteria", "Lokasi TOT",
+		"Universitas", "Unit Kerja", "Jabatan", "Golongan", "Kriteria", "Lokasi TOT", "Kelas Jabatan",
 		"Jumlah Sertifikat", "Daftar Sertifikat", "Link CV", "Link Sertifikat",
 	}
 	for i, hd := range headers {
@@ -182,7 +184,7 @@ func (h *PelatihHandler) Export(c *fiber.Ctx) error {
 		}
 		vals := []interface{}{
 			r + 1, p.NamaLengkap, p.NIP, p.Pendidikan, p.Jurusan,
-			p.Universitas, p.UnitKerja, p.Jabatan, p.Golongan, p.Kriteria, p.LokasiTOT,
+			p.Universitas, p.UnitKerja, p.Jabatan, p.Golongan, p.Kriteria, p.LokasiTOT, p.KelasJabatan,
 			len(p.Sertifikat), strings.Join(namaSert, ", "),
 			cvLink, strings.Join(sertLinks, "\n"),
 		}
