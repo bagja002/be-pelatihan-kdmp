@@ -51,6 +51,13 @@ func (f *fakePelatihRepo) UpdateSelf(p *entity.Pelatih, deleteSertifikatIDs []ui
 	f.newSertifikat = newSertifikat
 	return nil
 }
+func (f *fakePelatihRepo) UpdateFields(id uint, p *entity.Pelatih) error {
+	if f.updateErr != nil {
+		return f.updateErr
+	}
+	f.updated = p
+	return nil
+}
 func (f *fakePelatihRepo) Delete(uint) error {
 	if f.deleteErr != nil {
 		return f.deleteErr

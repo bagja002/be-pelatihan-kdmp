@@ -22,6 +22,7 @@ type PelatihRepository interface {
 	FindByID(id uint) (*entity.Pelatih, error)
 	FindByNIP(nip string) (*entity.Pelatih, error)
 	UpdateSelf(p *entity.Pelatih, deleteSertifikatIDs []uint, newSertifikat []entity.SertifikatKeahlian) error
+	UpdateFields(id uint, p *entity.Pelatih) error
 	Delete(id uint) error
 	FindSertifikat(id uint) (*entity.SertifikatKeahlian, error)
 }
@@ -76,7 +77,7 @@ func (r *pelatihRepository) UpdateSelf(p *entity.Pelatih, deleteSertifikatIDs []
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		// Perbarui hanya kolom yang diizinkan (NIP sengaja tidak termasuk).
 		if err := tx.Model(&entity.Pelatih{}).Where("id = ?", p.ID).Select(
-			"NamaLengkap", "Pendidikan", "Jurusan", "Universitas", "UnitKerja",
+			"NamaLengkap", "NoTelepon", "Pendidikan", "Jurusan", "Universitas", "UnitKerja",
 			"Jabatan", "Golongan", "Kriteria", "LokasiTOT", "KelasJabatan", "CV", "Status",
 		).Updates(p).Error; err != nil {
 			return err
@@ -97,6 +98,15 @@ func (r *pelatihRepository) UpdateSelf(p *entity.Pelatih, deleteSertifikatIDs []
 		}
 		return nil
 	})
+}
+
+// UpdateFields memperbarui hanya field teks pelatih (dipakai admin dashboard).
+// NIP, CV, dan sertifikat sengaja tidak termasuk.
+func (r *pelatihRepository) UpdateFields(id uint, p *entity.Pelatih) error {
+	return r.db.Model(&entity.Pelatih{}).Where("id = ?", id).Select(
+		"NamaLengkap", "NoTelepon", "Pendidikan", "Jurusan", "Universitas", "UnitKerja",
+		"Jabatan", "Golongan", "Kriteria", "LokasiTOT", "KelasJabatan",
+	).Updates(p).Error
 }
 
 // Delete menghapus (soft) pelatih beserta sertifikatnya.

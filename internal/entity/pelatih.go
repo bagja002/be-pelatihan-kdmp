@@ -13,6 +13,7 @@ type Pelatih struct {
 	ID           uint   `gorm:"primaryKey" json:"id"`
 	NamaLengkap  string `gorm:"type:varchar(255);not null" json:"namaLengkap"`
 	NIP          string `gorm:"column:nip;type:varchar(64);uniqueIndex;not null" json:"nip"` // kunci unik: tanpa data ganda
+	NoTelepon    string `gorm:"type:varchar(64);not null" json:"noTelepon"`                  // nomor telepon (wajib)
 	Pendidikan   string `gorm:"type:varchar(128)" json:"pendidikan"`                         // pendidikan terakhir
 	Jurusan      string `gorm:"type:varchar(255)" json:"jurusan"`
 	Universitas  string `gorm:"type:varchar(255)" json:"universitas"`

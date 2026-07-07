@@ -50,5 +50,6 @@ func RegisterPelatihAdminRoutes(protected fiber.Router, db *gorm.DB, store *stor
 	group.Get("/sertifikat/:sertifikatID/berkas", adminOnly, h.DownloadSertifikat)
 	group.Get("/:id", adminOnly, h.GetByID)
 	group.Get("/:id/cv", adminOnly, h.DownloadCV)
+	group.Put("/:id", adminOnly, h.AdminUpdate)
 	group.Delete("/:id", adminOnly, h.Delete)
 }

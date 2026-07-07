@@ -33,6 +33,7 @@ func (h *PelatihHandler) Register(c *fiber.Ctx) error {
 	req := dto.RegisterPelatihRequest{
 		NamaLengkap:  c.FormValue("namaLengkap"),
 		NIP:          c.FormValue("nip"),
+		NoTelepon:    c.FormValue("noTelepon"),
 		Pendidikan:   c.FormValue("pendidikan"),
 		Jurusan:      c.FormValue("jurusan"),
 		Universitas:  c.FormValue("universitas"),
@@ -50,6 +51,7 @@ func (h *PelatihHandler) Register(c *fiber.Ctx) error {
 	in := service.RegisterPelatihInput{
 		NamaLengkap:  req.NamaLengkap,
 		NIP:          req.NIP,
+		NoTelepon:    req.NoTelepon,
 		Pendidikan:   req.Pendidikan,
 		Jurusan:      req.Jurusan,
 		Universitas:  req.Universitas,
@@ -127,6 +129,7 @@ func (h *PelatihHandler) UpdateSelf(c *fiber.Ctx) error {
 	req := dto.RegisterPelatihRequest{
 		NamaLengkap:  c.FormValue("namaLengkap"),
 		NIP:          c.FormValue("nip"),
+		NoTelepon:    c.FormValue("noTelepon"),
 		Pendidikan:   c.FormValue("pendidikan"),
 		Jurusan:      c.FormValue("jurusan"),
 		Universitas:  c.FormValue("universitas"),
@@ -144,6 +147,7 @@ func (h *PelatihHandler) UpdateSelf(c *fiber.Ctx) error {
 	in := service.UpdateSelfInput{
 		NIP:          req.NIP,
 		NamaLengkap:  req.NamaLengkap,
+		NoTelepon:    req.NoTelepon,
 		Pendidikan:   req.Pendidikan,
 		Jurusan:      req.Jurusan,
 		Universitas:  req.Universitas,
@@ -198,6 +202,43 @@ func (h *PelatihHandler) UpdateSelf(c *fiber.Ctx) error {
 		}
 	}
 	return response.OK(c, "data berhasil diperbarui", fiber.Map{"id": p.ID})
+}
+
+// AdminUpdate — endpoint admin (JSON): perbarui field teks pelatih berdasarkan ID.
+// NIP, CV, dan sertifikat tidak diubah lewat endpoint ini.
+func (h *PelatihHandler) AdminUpdate(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return response.BadRequest(c, "invalid id")
+	}
+	var req dto.AdminUpdatePelatihRequest
+	if err := c.BodyParser(&req); err != nil {
+		return response.BadRequest(c, "permintaan tidak valid")
+	}
+	if errs := validator.Validate(&req); errs != nil {
+		return response.ValidationError(c, errs)
+	}
+
+	p, err := h.service.AdminUpdate(uint(id), service.AdminUpdatePelatihInput{
+		NamaLengkap:  req.NamaLengkap,
+		NoTelepon:    req.NoTelepon,
+		Pendidikan:   req.Pendidikan,
+		Jurusan:      req.Jurusan,
+		Universitas:  req.Universitas,
+		UnitKerja:    req.UnitKerja,
+		Jabatan:      req.Jabatan,
+		Golongan:     req.Golongan,
+		Kriteria:     req.Kriteria,
+		LokasiTOT:    req.LokasiTOT,
+		KelasJabatan: req.KelasJabatan,
+	})
+	if err != nil {
+		if errors.Is(err, repository.ErrPelatihNotFound) {
+			return response.NotFound(c, "pelatih not found")
+		}
+		return response.InternalError(c, err)
+	}
+	return response.OK(c, "data pelatih diperbarui", p)
 }
 
 func (h *PelatihHandler) List(c *fiber.Ctx) error {
@@ -259,7 +300,7 @@ func (h *PelatihHandler) Export(c *fiber.Ctx) error {
 	f.SetSheetName("Sheet1", sheet)
 
 	headers := []string{
-		"No", "Nama Lengkap", "NIP", "Pendidikan Terakhir", "Jurusan",
+		"No", "Nama Lengkap", "NIP", "No. Telepon", "Pendidikan Terakhir", "Jurusan",
 		"Universitas", "Unit Kerja", "Jabatan", "Golongan", "Kriteria", "Lokasi TOT", "Kelas Jabatan",
 		"Jumlah Sertifikat", "Daftar Sertifikat", "Link CV", "Link Sertifikat",
 	}
@@ -285,7 +326,7 @@ func (h *PelatihHandler) Export(c *fiber.Ctx) error {
 			cvLink = fmt.Sprintf("%s/api/v1/pelatih/%d/cv", baseURL, p.ID)
 		}
 		vals := []interface{}{
-			r + 1, p.NamaLengkap, p.NIP, p.Pendidikan, p.Jurusan,
+			r + 1, p.NamaLengkap, p.NIP, p.NoTelepon, p.Pendidikan, p.Jurusan,
 			p.Universitas, p.UnitKerja, p.Jabatan, p.Golongan, p.Kriteria, p.LokasiTOT, p.KelasJabatan,
 			len(p.Sertifikat), strings.Join(namaSert, ", "),
 			cvLink, strings.Join(sertLinks, "\n"),

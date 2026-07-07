@@ -23,6 +23,7 @@ type CertUpload struct {
 type RegisterPelatihInput struct {
 	NamaLengkap  string
 	NIP          string
+	NoTelepon    string
 	Pendidikan   string
 	Jurusan      string
 	Universitas  string
@@ -40,6 +41,7 @@ type RegisterPelatihInput struct {
 type UpdateSelfInput struct {
 	NIP          string // kunci pencarian; tidak diubah
 	NamaLengkap  string
+	NoTelepon    string
 	Pendidikan   string
 	Jurusan      string
 	Universitas  string
@@ -54,12 +56,28 @@ type UpdateSelfInput struct {
 	NewSertifikat     []CertUpload      // sertifikat baru yang ditambahkan
 }
 
+// AdminUpdatePelatihInput — field teks yang diubah admin (kunci: ID).
+type AdminUpdatePelatihInput struct {
+	NamaLengkap  string
+	NoTelepon    string
+	Pendidikan   string
+	Jurusan      string
+	Universitas  string
+	UnitKerja    string
+	Jabatan      string
+	Golongan     string
+	Kriteria     string
+	LokasiTOT    string
+	KelasJabatan string
+}
+
 type PelatihService interface {
 	Register(in RegisterPelatihInput) (*entity.Pelatih, error)
 	List() ([]entity.Pelatih, error)
 	Get(id uint) (*entity.Pelatih, error)
 	FindByNIP(nip string) (*entity.Pelatih, error)
 	UpdateSelf(in UpdateSelfInput) (*entity.Pelatih, error)
+	AdminUpdate(id uint, in AdminUpdatePelatihInput) (*entity.Pelatih, error)
 	Delete(id uint) error
 	Sertifikat(id uint) (*entity.SertifikatKeahlian, error)
 }
@@ -120,6 +138,7 @@ func (s *pelatihService) Register(in RegisterPelatihInput) (*entity.Pelatih, err
 	p := &entity.Pelatih{
 		NamaLengkap:  in.NamaLengkap,
 		NIP:          in.NIP,
+		NoTelepon:    in.NoTelepon,
 		Pendidikan:   in.Pendidikan,
 		Jurusan:      in.Jurusan,
 		Universitas:  in.Universitas,
@@ -227,6 +246,7 @@ func (s *pelatihService) UpdateSelf(in UpdateSelfInput) (*entity.Pelatih, error)
 	// 5. Terapkan field teks (NIP tetap). Ganti CV hanya bila ada berkas baru.
 	oldCV := p.CV
 	p.NamaLengkap = in.NamaLengkap
+	p.NoTelepon = in.NoTelepon
 	p.Pendidikan = in.Pendidikan
 	p.Jurusan = in.Jurusan
 	p.Universitas = in.Universitas
@@ -257,6 +277,32 @@ func (s *pelatihService) UpdateSelf(in UpdateSelfInput) (*entity.Pelatih, error)
 
 	// 8. Kembalikan data terbaru (termasuk sertifikat gabungan).
 	return s.repo.FindByNIP(in.NIP)
+}
+
+// AdminUpdate memperbarui field teks pelatih dari dashboard admin (kunci: ID).
+// NIP, CV, dan sertifikat tidak diubah lewat endpoint ini.
+func (s *pelatihService) AdminUpdate(id uint, in AdminUpdatePelatihInput) (*entity.Pelatih, error) {
+	// Pastikan data ada lebih dulu (404 bila tidak).
+	if _, err := s.repo.FindByID(id); err != nil {
+		return nil, err
+	}
+	p := &entity.Pelatih{
+		NamaLengkap:  in.NamaLengkap,
+		NoTelepon:    in.NoTelepon,
+		Pendidikan:   in.Pendidikan,
+		Jurusan:      in.Jurusan,
+		Universitas:  in.Universitas,
+		UnitKerja:    in.UnitKerja,
+		Jabatan:      in.Jabatan,
+		Golongan:     in.Golongan,
+		Kriteria:     in.Kriteria,
+		LokasiTOT:    in.LokasiTOT,
+		KelasJabatan: in.KelasJabatan,
+	}
+	if err := s.repo.UpdateFields(id, p); err != nil {
+		return nil, err
+	}
+	return s.repo.FindByID(id)
 }
 
 func (s *pelatihService) Delete(id uint) error {
