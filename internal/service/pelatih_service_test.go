@@ -20,6 +20,11 @@ type fakePelatihRepo struct {
 	findErr    error
 	deleted    bool
 	deleteErr  error
+
+	updateErr            error
+	updated              *entity.Pelatih
+	deletedSertifikatIDs []uint
+	newSertifikat        []entity.SertifikatKeahlian
 }
 
 func (f *fakePelatihRepo) ExistsNIP(string) (bool, error) { return f.exists, nil }
@@ -33,6 +38,18 @@ func (f *fakePelatihRepo) Create(p *entity.Pelatih) error {
 func (f *fakePelatihRepo) FindAll() ([]entity.Pelatih, error) { return nil, nil }
 func (f *fakePelatihRepo) FindByID(uint) (*entity.Pelatih, error) {
 	return f.findResult, f.findErr
+}
+func (f *fakePelatihRepo) FindByNIP(string) (*entity.Pelatih, error) {
+	return f.findResult, f.findErr
+}
+func (f *fakePelatihRepo) UpdateSelf(p *entity.Pelatih, deleteSertifikatIDs []uint, newSertifikat []entity.SertifikatKeahlian) error {
+	if f.updateErr != nil {
+		return f.updateErr
+	}
+	f.updated = p
+	f.deletedSertifikatIDs = deleteSertifikatIDs
+	f.newSertifikat = newSertifikat
+	return nil
 }
 func (f *fakePelatihRepo) Delete(uint) error {
 	if f.deleteErr != nil {
@@ -130,6 +147,76 @@ func TestRegister_CreateGagal_BersihkanBerkas(t *testing.T) {
 	}
 	if n := countFiles(t, root+"/pelatih"); n != 0 {
 		t.Errorf("berkas harus dibersihkan saat Create gagal, dapat %d", n)
+	}
+}
+
+func TestUpdateSelf_TanpaSertifikat_Ditolak(t *testing.T) {
+	root := t.TempDir()
+	repo := &fakePelatihRepo{
+		findResult: &entity.Pelatih{ID: 1, NIP: "123", Sertifikat: []entity.SertifikatKeahlian{
+			{ID: 7, IDPelatih: 1, NamaSertifikat: "Ahli K3", Berkas: "pelatih/k3.pdf"},
+		}},
+	}
+	svc := NewPelatihService(repo, storage.New(root, 1<<20))
+
+	// Hapus semua sertifikat lama (keep kosong) & tak menambah baru → harus ditolak.
+	_, err := svc.UpdateSelf(UpdateSelfInput{NIP: "123", NamaLengkap: "Budi"})
+	if !errors.Is(err, ErrNoSertifikat) {
+		t.Fatalf("harus ErrNoSertifikat, dapat %v", err)
+	}
+	if repo.updated != nil {
+		t.Error("tidak boleh menyentuh DB saat validasi gagal")
+	}
+	if n := countFiles(t, root+"/pelatih"); n != 0 {
+		t.Errorf("tak boleh ada berkas tersimpan, dapat %d", n)
+	}
+}
+
+func TestUpdateSelf_GantiCVdanSertifikat_BersihkanBerkasLama(t *testing.T) {
+	root := t.TempDir()
+	store := storage.New(root, 1<<20)
+
+	oldCV, _ := store.Save(fileHeader(t, "cv-lama.pdf", []byte("cv")), "pelatih")
+	oldCert, _ := store.Save(fileHeader(t, "k3-lama.pdf", []byte("k3")), "pelatih")
+
+	repo := &fakePelatihRepo{
+		findResult: &entity.Pelatih{ID: 1, NIP: "123", CV: oldCV, Sertifikat: []entity.SertifikatKeahlian{
+			{ID: 7, IDPelatih: 1, NamaSertifikat: "Ahli K3", Berkas: oldCert},
+		}},
+	}
+	svc := NewPelatihService(repo, store)
+
+	// Ganti CV, hapus sertifikat lama (keep kosong), tambah 1 sertifikat baru.
+	got, err := svc.UpdateSelf(UpdateSelfInput{
+		NIP:         "123",
+		NamaLengkap: "Budi Baru",
+		LokasiTOT:   "Bandung",
+		CV:          fileHeader(t, "cv-baru.pdf", []byte("cvbaru")),
+		NewSertifikat: []CertUpload{
+			{Nama: "Ahli Selam", File: fileHeader(t, "selam.pdf", []byte("selam"))},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateSelf: %v", err)
+	}
+	if got == nil || repo.updated == nil {
+		t.Fatal("DB harus diperbarui")
+	}
+	if repo.updated.Status != "diperbarui" {
+		t.Errorf("status harus 'diperbarui', dapat %q", repo.updated.Status)
+	}
+	if repo.updated.NIP != "123" {
+		t.Errorf("NIP tidak boleh berubah, dapat %q", repo.updated.NIP)
+	}
+	if len(repo.deletedSertifikatIDs) != 1 || repo.deletedSertifikatIDs[0] != 7 {
+		t.Errorf("sertifikat lama (id 7) harus dihapus, dapat %v", repo.deletedSertifikatIDs)
+	}
+	if len(repo.newSertifikat) != 1 {
+		t.Errorf("harus ada 1 sertifikat baru, dapat %d", len(repo.newSertifikat))
+	}
+	// Berkas lama (CV + sertifikat) terhapus; berkas baru (CV + sertifikat) tersimpan → sisa 2.
+	if n := countFiles(t, root+"/pelatih"); n != 2 {
+		t.Errorf("harus 2 berkas tersisa (yang baru), dapat %d", n)
 	}
 }
 

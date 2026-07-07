@@ -35,6 +35,8 @@ func RegisterPelatihPublicRoutes(api fiber.Router, db *gorm.DB, store *storage.S
 
 	group := api.Group("/pelatih")
 	group.Post("/register", strict, h.Register)
+	group.Post("/lookup", strict, h.Lookup)  // cari data by NIP (edit mandiri)
+	group.Put("/self", strict, h.UpdateSelf) // perbarui data sendiri by NIP
 }
 
 // RegisterPelatihAdminRoutes: kelola pelatih untuk admin/super_admin.

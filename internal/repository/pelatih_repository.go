@@ -20,6 +20,8 @@ type PelatihRepository interface {
 	Create(p *entity.Pelatih) error
 	FindAll() ([]entity.Pelatih, error)
 	FindByID(id uint) (*entity.Pelatih, error)
+	FindByNIP(nip string) (*entity.Pelatih, error)
+	UpdateSelf(p *entity.Pelatih, deleteSertifikatIDs []uint, newSertifikat []entity.SertifikatKeahlian) error
 	Delete(id uint) error
 	FindSertifikat(id uint) (*entity.SertifikatKeahlian, error)
 }
@@ -54,6 +56,47 @@ func (r *pelatihRepository) FindByID(id uint) (*entity.Pelatih, error) {
 		return nil, err
 	}
 	return &p, nil
+}
+
+// FindByNIP mencari pelatih berdasarkan NIP (kunci swakelola edit mandiri).
+func (r *pelatihRepository) FindByNIP(nip string) (*entity.Pelatih, error) {
+	var p entity.Pelatih
+	if err := r.db.Preload("Sertifikat").Where("nip = ?", nip).First(&p).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrPelatihNotFound
+		}
+		return nil, err
+	}
+	return &p, nil
+}
+
+// UpdateSelf memperbarui field skalar pelatih, menghapus sertifikat tertentu,
+// dan menambah sertifikat baru — semuanya dalam satu transaksi. NIP tidak diubah.
+func (r *pelatihRepository) UpdateSelf(p *entity.Pelatih, deleteSertifikatIDs []uint, newSertifikat []entity.SertifikatKeahlian) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Perbarui hanya kolom yang diizinkan (NIP sengaja tidak termasuk).
+		if err := tx.Model(&entity.Pelatih{}).Where("id = ?", p.ID).Select(
+			"NamaLengkap", "Pendidikan", "Jurusan", "Universitas", "UnitKerja",
+			"Jabatan", "Golongan", "Kriteria", "LokasiTOT", "KelasJabatan", "CV", "Status",
+		).Updates(p).Error; err != nil {
+			return err
+		}
+		if len(deleteSertifikatIDs) > 0 {
+			if err := tx.Where("id_pelatih = ? AND id IN ?", p.ID, deleteSertifikatIDs).
+				Delete(&entity.SertifikatKeahlian{}).Error; err != nil {
+				return err
+			}
+		}
+		if len(newSertifikat) > 0 {
+			for i := range newSertifikat {
+				newSertifikat[i].IDPelatih = p.ID
+			}
+			if err := tx.Create(&newSertifikat).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 // Delete menghapus (soft) pelatih beserta sertifikatnya.

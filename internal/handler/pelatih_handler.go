@@ -98,6 +98,108 @@ func (h *PelatihHandler) Register(c *fiber.Ctx) error {
 	return response.Created(c, "pendaftaran berhasil", fiber.Map{"id": p.ID})
 }
 
+// Lookup — endpoint publik: cari data pelatih berdasarkan NIP (untuk edit mandiri).
+// NIP bukan rahasia, jadi endpoint ini rate-limited di router.
+func (h *PelatihHandler) Lookup(c *fiber.Ctx) error {
+	var body struct {
+		NIP string `json:"nip"`
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return response.BadRequest(c, "permintaan tidak valid")
+	}
+	nip := strings.TrimSpace(body.NIP)
+	if nip == "" {
+		return response.BadRequest(c, "NIP wajib diisi")
+	}
+	p, err := h.service.FindByNIP(nip)
+	if err != nil {
+		if errors.Is(err, repository.ErrPelatihNotFound) {
+			return response.NotFound(c, "NIP tidak ditemukan")
+		}
+		return response.InternalError(c, err)
+	}
+	return response.OK(c, "pelatih ditemukan", p)
+}
+
+// UpdateSelf — endpoint publik multipart/form-data: pelatih memperbarui datanya
+// sendiri berdasarkan NIP. NIP dipakai sebagai kunci dan tidak diubah.
+func (h *PelatihHandler) UpdateSelf(c *fiber.Ctx) error {
+	req := dto.RegisterPelatihRequest{
+		NamaLengkap:  c.FormValue("namaLengkap"),
+		NIP:          c.FormValue("nip"),
+		Pendidikan:   c.FormValue("pendidikan"),
+		Jurusan:      c.FormValue("jurusan"),
+		Universitas:  c.FormValue("universitas"),
+		UnitKerja:    c.FormValue("unitKerja"),
+		Jabatan:      c.FormValue("jabatan"),
+		Golongan:     c.FormValue("golongan"),
+		Kriteria:     c.FormValue("kriteria"),
+		LokasiTOT:    c.FormValue("lokasiTot"),
+		KelasJabatan: c.FormValue("kelasJabatan"),
+	}
+	if errs := validator.Validate(&req); errs != nil {
+		return response.ValidationError(c, errs)
+	}
+
+	in := service.UpdateSelfInput{
+		NIP:          req.NIP,
+		NamaLengkap:  req.NamaLengkap,
+		Pendidikan:   req.Pendidikan,
+		Jurusan:      req.Jurusan,
+		Universitas:  req.Universitas,
+		UnitKerja:    req.UnitKerja,
+		Jabatan:      req.Jabatan,
+		Golongan:     req.Golongan,
+		Kriteria:     req.Kriteria,
+		LokasiTOT:    req.LokasiTOT,
+		KelasJabatan: req.KelasJabatan,
+	}
+
+	// CV baru opsional.
+	if cv, err := c.FormFile("cv"); err == nil && cv != nil {
+		in.CV = cv
+	}
+
+	if form, err := c.MultipartForm(); err == nil && form != nil {
+		// Sertifikat lama yang dipertahankan (ID).
+		for _, s := range form.Value["keepSertifikatIds[]"] {
+			if id, err := strconv.ParseUint(strings.TrimSpace(s), 10, 64); err == nil {
+				in.KeepSertifikatIDs = append(in.KeepSertifikatIDs, uint(id))
+			}
+		}
+		// Sertifikat baru: pasangkan nama[i] dengan berkas[i].
+		names := form.Value["sertifikatNama[]"]
+		files := form.File["sertifikat[]"]
+		for i, f := range files {
+			nama := ""
+			if i < len(names) {
+				nama = names[i]
+			}
+			if nama == "" {
+				continue
+			}
+			in.NewSertifikat = append(in.NewSertifikat, service.CertUpload{Nama: nama, File: f})
+		}
+	}
+
+	p, err := h.service.UpdateSelf(in)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrPelatihNotFound):
+			return response.NotFound(c, "NIP tidak ditemukan")
+		case errors.Is(err, service.ErrNoSertifikat):
+			return response.BadRequest(c, "minimal 1 sertifikat wajib ada")
+		case errors.Is(err, storage.ErrFileType):
+			return response.BadRequest(c, "tipe berkas tidak diizinkan (hanya PDF)")
+		case errors.Is(err, storage.ErrFileTooLarge):
+			return response.BadRequest(c, "ukuran berkas melebihi batas")
+		default:
+			return response.InternalError(c, err)
+		}
+	}
+	return response.OK(c, "data berhasil diperbarui", fiber.Map{"id": p.ID})
+}
+
 func (h *PelatihHandler) List(c *fiber.Ctx) error {
 	data, err := h.service.List()
 	if err != nil {

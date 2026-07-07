@@ -38,6 +38,8 @@ func messageFor(e govalidator.FieldError) string {
 		return e.Field() + " must be at most " + e.Param() + " characters"
 	case "email":
 		return e.Field() + " must be a valid email"
+	case "oneof":
+		return e.Field() + " must be one of: " + e.Param()
 	default:
 		return e.Field() + " is invalid"
 	}
