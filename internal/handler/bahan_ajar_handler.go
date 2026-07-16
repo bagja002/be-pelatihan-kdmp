@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -61,7 +60,7 @@ func (h *BahanAjarHandler) Download(c *fiber.Ctx) error {
 	if rel == "" {
 		return response.NotFound(c, "berkas belum diunggah")
 	}
-	return c.Download(h.store.Path(rel), fmt.Sprintf("%s%s", item.Judul, filepath.Ext(rel)))
+	return c.Download(h.store.Path(rel), sanitizeFilename(item.Judul)+filepath.Ext(rel))
 }
 
 // CreateKategori — admin: tambah kategori (body JSON).
@@ -179,12 +178,37 @@ func fillItemInput(c *fiber.Ctx, in *service.BahanAjarItemInput) {
 	}
 }
 
+// sanitizeFilename membersihkan judul agar aman dipakai sebagai nama berkas unduhan.
+// Hanya huruf/angka ASCII, spasi, strip, underscore, dan titik yang dipertahankan;
+// karakter lain (kutip, CR/LF, non-ASCII, dsb.) diganti "-" supaya header
+// Content-Disposition tidak rusak. Bila hasilnya kosong, pakai nama default.
+func sanitizeFilename(judul string) string {
+	var b strings.Builder
+	for _, r := range judul {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
+			b.WriteRune(r)
+		case r == ' ', r == '-', r == '_', r == '.':
+			b.WriteRune(r)
+		default:
+			b.WriteRune('-')
+		}
+	}
+	out := strings.TrimSpace(b.String())
+	if out == "" {
+		return "bahan-ajar"
+	}
+	return out
+}
+
 func (h *BahanAjarHandler) kategoriError(c *fiber.Ctx, err error) error {
 	switch {
 	case errors.Is(err, repository.ErrKategoriNotFound):
 		return response.NotFound(c, "kategori tidak ditemukan")
 	case errors.Is(err, service.ErrNamaKategoriDipakai):
 		return response.Conflict(c, "nama kategori sudah dipakai")
+	case errors.Is(err, service.ErrNamaKategoriKosong):
+		return response.BadRequest(c, "nama kategori wajib diisi")
 	case errors.Is(err, service.ErrKategoriBerisi):
 		return response.Conflict(c, "kategori masih berisi bahan ajar — kosongkan dulu")
 	default:

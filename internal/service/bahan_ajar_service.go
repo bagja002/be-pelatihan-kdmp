@@ -15,6 +15,8 @@ var (
 	ErrKategoriBerisi = errors.New("kategori masih berisi bahan ajar")
 	// ErrNamaKategoriDipakai: nama kategori harus unik (di antara yang aktif).
 	ErrNamaKategoriDipakai = errors.New("nama kategori sudah dipakai")
+	// ErrNamaKategoriKosong: nama kategori tidak boleh kosong/hanya spasi.
+	ErrNamaKategoriKosong = errors.New("nama kategori wajib diisi")
 )
 
 const bahanAjarSubdir = "bahan-ajar"
@@ -55,6 +57,9 @@ func (s *bahanAjarService) ListKategori() ([]entity.BahanAjarKategori, error) {
 
 func (s *bahanAjarService) CreateKategori(nama string, urutan *int) (*entity.BahanAjarKategori, error) {
 	nama = strings.TrimSpace(nama)
+	if nama == "" {
+		return nil, ErrNamaKategoriKosong
+	}
 	dup, err := s.repo.ExistsKategoriNama(nama, 0)
 	if err != nil {
 		return nil, err
@@ -79,6 +84,9 @@ func (s *bahanAjarService) UpdateKategori(id uint, nama string, urutan *int) (*e
 		return nil, err
 	}
 	nama = strings.TrimSpace(nama)
+	if nama == "" {
+		return nil, ErrNamaKategoriKosong
+	}
 	dup, err := s.repo.ExistsKategoriNama(nama, id)
 	if err != nil {
 		return nil, err
@@ -130,7 +138,7 @@ func (s *bahanAjarService) CreateItem(in BahanAjarItemInput) (*entity.BahanAjar,
 		return nil, err
 	}
 
-	u := 0
+	var u int
 	if in.Urutan != nil {
 		u = *in.Urutan
 	} else {

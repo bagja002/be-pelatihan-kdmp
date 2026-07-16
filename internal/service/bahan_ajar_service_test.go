@@ -268,6 +268,13 @@ func TestBahanAjarDeleteKategoriBerisiDitolak(t *testing.T) {
 	}
 }
 
+func TestBahanAjarKategoriNamaKosong(t *testing.T) {
+	svc, _, _ := newBahanAjarTestService(t)
+	if _, err := svc.CreateKategori("   ", nil); !errors.Is(err, ErrNamaKategoriKosong) {
+		t.Errorf("harus ErrNamaKategoriKosong, dapat: %v", err)
+	}
+}
+
 func TestBahanAjarKategoriNamaGanda(t *testing.T) {
 	svc, _, _ := newBahanAjarTestService(t)
 	if _, err := svc.CreateKategori("Kompetensi Umum", nil); err != nil {
