@@ -40,10 +40,13 @@ func main() {
 	tm := token.NewManager(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL, cfg.PesertaTokenTTL, "knmp-backend")
 
 	app := fiber.New(fiber.Config{
-		AppName:               "knmp-backend",
-		BodyLimit:             cfg.BodyLimit,
-		ReadTimeout:           15 * time.Second,
-		WriteTimeout:          15 * time.Second,
+		AppName:   "knmp-backend",
+		BodyLimit: cfg.BodyLimit,
+		// StreamRequestBody: body tidak ditampung penuh di RAM — multipart
+		// besar (bahan ajar ratusan MB) di-spill fasthttp ke temp dir OS.
+		StreamRequestBody:     true,
+		ReadTimeout:           cfg.ReadTimeout,
+		WriteTimeout:          cfg.WriteTimeout,
 		IdleTimeout:           60 * time.Second,
 		DisableStartupMessage: true,
 		ErrorHandler:          response.ErrorHandler(cfg.IsProduction()),

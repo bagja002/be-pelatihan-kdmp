@@ -35,6 +35,11 @@ type Config struct {
 
 	BodyLimit int
 
+	// Timeout baca/tulis HTTP. Longgar karena upload/unduh bahan ajar bisa
+	// ratusan MB; berlaku global untuk semua endpoint.
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+
 	// Upload berkas (CV & sertifikat pelatih).
 	UploadDir      string
 	MaxUploadBytes int64
@@ -78,10 +83,12 @@ func Load() (*Config, error) {
 	c.PesertaTokenTTL = getDuration("PESERTA_TOKEN_TTL", 30*time.Minute)
 	c.RateLimitMax = getInt("RATE_LIMIT_MAX", 100)
 	c.RateLimitWindow = getDuration("RATE_LIMIT_WINDOW", time.Minute)
-	c.BodyLimit = getInt("BODY_LIMIT_BYTES", 70*1024*1024) // 70 MiB (muat PDF + PPT bahan ajar)
+	c.BodyLimit = getInt("BODY_LIMIT_BYTES", 550*1024*1024) // 550 MiB (muat PDF 250 + PPT 250 + overhead multipart)
+	c.ReadTimeout = getDuration("READ_TIMEOUT", 30*time.Minute)
+	c.WriteTimeout = getDuration("WRITE_TIMEOUT", 30*time.Minute)
 	c.UploadDir = getEnv("UPLOAD_DIR", "./uploads")
-	c.MaxUploadBytes = int64(getInt("MAX_UPLOAD_BYTES", 5*1024*1024))         // 5 MiB per berkas
-	c.MaxBahanAjarBytes = int64(getInt("MAX_BAHAN_AJAR_BYTES", 30*1024*1024)) // 30 MiB per berkas bahan ajar
+	c.MaxUploadBytes = int64(getInt("MAX_UPLOAD_BYTES", 5*1024*1024))          // 5 MiB per berkas
+	c.MaxBahanAjarBytes = int64(getInt("MAX_BAHAN_AJAR_BYTES", 250*1024*1024)) // 250 MiB per berkas bahan ajar
 
 	if err := c.resolveSecrets(); err != nil {
 		return nil, err
