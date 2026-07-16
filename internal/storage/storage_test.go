@@ -90,3 +90,37 @@ func TestSaveRejectsBadType(t *testing.T) {
 		t.Errorf("harus ErrFileType, dapat: %v", err)
 	}
 }
+
+func TestValidateAs(t *testing.T) {
+	s := New(t.TempDir(), 100)
+	if err := s.ValidateAs("materi.pptx", 50, ExtPPT); err != nil {
+		t.Errorf("pptx harus valid untuk ExtPPT, dapat: %v", err)
+	}
+	if err := s.ValidateAs("materi.PPT", 50, ExtPPT); err != nil {
+		t.Errorf("PPT (case-insensitive) harus valid, dapat: %v", err)
+	}
+	if err := s.ValidateAs("materi.pdf", 50, ExtPPT); err != ErrFileType {
+		t.Errorf("pdf harus ditolak untuk ExtPPT, dapat: %v", err)
+	}
+	if err := s.ValidateAs("materi.pdf", 50, ExtPDF); err != nil {
+		t.Errorf("pdf harus valid untuk ExtPDF, dapat: %v", err)
+	}
+	if err := s.ValidateAs("materi.pptx", 200, ExtPPT); err != ErrFileTooLarge {
+		t.Errorf("200B > 100 harus ErrFileTooLarge, dapat: %v", err)
+	}
+}
+
+func TestSaveAsPpt(t *testing.T) {
+	s := New(t.TempDir(), 1<<20)
+	fh := makeFileHeader(t, "modul 1.pptx", []byte("isi ppt"))
+	rel, err := s.SaveAs(fh, "bahan-ajar", ExtPPT)
+	if err != nil {
+		t.Fatalf("SaveAs: %v", err)
+	}
+	if !strings.HasPrefix(rel, "bahan-ajar/") || !strings.HasSuffix(rel, ".pptx") {
+		t.Errorf("path relatif tak terduga: %q", rel)
+	}
+	if _, err := s.SaveAs(makeFileHeader(t, "x.exe", []byte("MZ")), "bahan-ajar", ExtPPT); err != ErrFileType {
+		t.Errorf("exe harus ErrFileType, dapat: %v", err)
+	}
+}

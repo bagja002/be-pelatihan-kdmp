@@ -19,10 +19,14 @@ var (
 	ErrFileTooLarge = errors.New("ukuran berkas melebihi batas")
 )
 
-// Hanya PDF yang diizinkan untuk semua berkas (CV & sertifikat).
-var allowedExt = map[string]bool{
-	".pdf": true,
-}
+// Whitelist ekstensi per jenis berkas. Save/Validate lama tetap hanya PDF
+// (CV & sertifikat); bahan ajar memakai SaveAs dengan ExtPDF/ExtPPT per slot.
+var (
+	ExtPDF = map[string]bool{".pdf": true}
+	ExtPPT = map[string]bool{".ppt": true, ".pptx": true}
+)
+
+var allowedExt = ExtPDF
 
 type Store struct {
 	root     string
@@ -33,21 +37,31 @@ func New(root string, maxBytes int64) *Store {
 	return &Store{root: root, maxBytes: maxBytes}
 }
 
-// Validate memeriksa ekstensi (case-insensitive) & ukuran.
+// Validate memeriksa ekstensi (case-insensitive) & ukuran — hanya PDF.
 func (s *Store) Validate(filename string, size int64) error {
+	return s.ValidateAs(filename, size, allowedExt)
+}
+
+// ValidateAs seperti Validate, tapi terhadap whitelist ekstensi khusus.
+func (s *Store) ValidateAs(filename string, size int64, allowed map[string]bool) error {
 	if size > s.maxBytes {
 		return ErrFileTooLarge
 	}
-	if !allowedExt[strings.ToLower(filepath.Ext(filename))] {
+	if !allowed[strings.ToLower(filepath.Ext(filename))] {
 		return ErrFileType
 	}
 	return nil
 }
 
-// Save memvalidasi lalu menulis fh ke <root>/<subdir>/<uuid><ext>.
+// Save memvalidasi (hanya PDF) lalu menulis fh ke <root>/<subdir>/<uuid><ext>.
 // Mengembalikan path relatif terhadap root (mis. "pelatih/ab-12.pdf").
 func (s *Store) Save(fh *multipart.FileHeader, subdir string) (string, error) {
-	if err := s.Validate(fh.Filename, fh.Size); err != nil {
+	return s.SaveAs(fh, subdir, allowedExt)
+}
+
+// SaveAs seperti Save, tapi dengan whitelist ekstensi khusus (mis. ExtPPT).
+func (s *Store) SaveAs(fh *multipart.FileHeader, subdir string, allowed map[string]bool) (string, error) {
+	if err := s.ValidateAs(fh.Filename, fh.Size, allowed); err != nil {
 		return "", err
 	}
 	ext := strings.ToLower(filepath.Ext(fh.Filename))
