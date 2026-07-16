@@ -80,7 +80,7 @@ func Load() (*Config, error) {
 	c.RateLimitWindow = getDuration("RATE_LIMIT_WINDOW", time.Minute)
 	c.BodyLimit = getInt("BODY_LIMIT_BYTES", 70*1024*1024) // 70 MiB (muat PDF + PPT bahan ajar)
 	c.UploadDir = getEnv("UPLOAD_DIR", "./uploads")
-	c.MaxUploadBytes = int64(getInt("MAX_UPLOAD_BYTES", 5*1024*1024))          // 5 MiB per berkas
+	c.MaxUploadBytes = int64(getInt("MAX_UPLOAD_BYTES", 5*1024*1024))         // 5 MiB per berkas
 	c.MaxBahanAjarBytes = int64(getInt("MAX_BAHAN_AJAR_BYTES", 30*1024*1024)) // 30 MiB per berkas bahan ajar
 
 	if err := c.resolveSecrets(); err != nil {
