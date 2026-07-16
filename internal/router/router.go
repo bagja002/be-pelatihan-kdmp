@@ -12,7 +12,7 @@ import (
 // SetupRoutes registers every route group. After scaffolding a new entity
 // with the generator, register it here with a single line — either on the
 // public `api` group or the authenticated `protected` group.
-func SetupRoutes(app *fiber.App, db *gorm.DB, tm *token.Manager, store *storage.Store) {
+func SetupRoutes(app *fiber.App, db *gorm.DB, tm *token.Manager, store, bahanStore *storage.Store) {
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
@@ -31,6 +31,9 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, tm *token.Manager, store *storage.
 	// Pelatih SDM: registrasi mandiri publik (link terbuka).
 	RegisterPelatihPublicRoutes(api, db, store)
 
+	// Bahan ajar: daftar & unduh publik (link terbuka).
+	RegisterBahanAjarPublicRoutes(api, db, bahanStore)
+
 	// Protected group: every route below requires a valid JWT access token.
 	protected := api.Group("", middleware.RequireAuth(tm))
 
@@ -42,5 +45,6 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, tm *token.Manager, store *storage.
 	RegisterPesertaImportRoutes(protected, db)
 	RegisterPesertaAdminRoutes(protected, db)
 	RegisterPelatihAdminRoutes(protected, db, store)
+	RegisterBahanAjarAdminRoutes(protected, db, bahanStore)
 	// ────────────────────────────────────────────────────────────
 }

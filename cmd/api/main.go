@@ -85,7 +85,9 @@ func main() {
 	}))
 
 	store := storage.New(cfg.UploadDir, cfg.MaxUploadBytes)
-	router.SetupRoutes(app, db, tm, store)
+	// Store terpisah untuk bahan ajar: root sama, batas ukuran lebih besar.
+	bahanStore := storage.New(cfg.UploadDir, cfg.MaxBahanAjarBytes)
+	router.SetupRoutes(app, db, tm, store, bahanStore)
 
 	addr := ":" + cfg.AppPort
 	log.Printf("server (%s) listening on %s", cfg.AppEnv, addr)
