@@ -6,7 +6,7 @@ type CreatePesertaRequest struct {
 	Nama                string `json:"nama" validate:"omitempty,max=255"`
 	NIK                 string `json:"nik" validate:"required,max=32"`
 	NoTelepon           string `json:"noTelepon" validate:"omitempty,max=64"`
-	Email               string `json:"email" validate:"omitempty,email,max=255"`
+	Email               string `json:"email" validate:"omitempty,max=255"`
 	Provinsi            string `json:"provinsi" validate:"omitempty,max=128"`
 	Kota                string `json:"kota" validate:"omitempty,max=128"`
 	Kecamatan           string `json:"kecamatan" validate:"omitempty,max=128"`
@@ -40,7 +40,7 @@ type UpdatePesertaRequest = CreatePesertaRequest
 type UpdateSelfRequest struct {
 	Nama                string `json:"nama" validate:"omitempty,max=255"`
 	NoTelepon           string `json:"noTelepon" validate:"omitempty,max=64"`
-	Email               string `json:"email" validate:"omitempty,email,max=255"`
+	Email               string `json:"email" validate:"omitempty,max=255"`
 	Provinsi            string `json:"provinsi" validate:"omitempty,max=128"`
 	Kota                string `json:"kota" validate:"omitempty,max=128"`
 	Kecamatan           string `json:"kecamatan" validate:"omitempty,max=128"`

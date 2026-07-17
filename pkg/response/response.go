@@ -55,7 +55,11 @@ func TooManyRequests(c *fiber.Ctx, message string) error {
 }
 
 // ValidationError returns a 422 response carrying field-level errors.
+// Dicatat ke log (dengan request id) agar penyebab 422 terlihat di server,
+// bukan hanya di body respons klien.
 func ValidationError(c *fiber.Ctx, errs any) error {
+	log.Printf("[VALIDATION] rid=%v method=%s path=%s errors=%+v",
+		c.Locals("requestid"), c.Method(), c.OriginalURL(), errs)
 	return c.Status(fiber.StatusUnprocessableEntity).JSON(Response{Success: false, Message: "validation failed", Errors: errs})
 }
 
