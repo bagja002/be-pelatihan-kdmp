@@ -26,7 +26,7 @@ type DataPeserta struct {
 	TanggalLahir        string `gorm:"type:varchar(32)" json:"tanggalLahir"`
 	JenisKelamin        string `gorm:"type:varchar(32)" json:"jenisKelamin"`
 	Pekerjaan           string `gorm:"type:varchar(128)" json:"pekerjaan"`
-	GolonganDarah       string `gorm:"type:varchar(8)" json:"golonganDarah"`
+	GolonganDarah       string `gorm:"type:varchar(32)" json:"golonganDarah"` // longgar: data import Excel bisa "Tidak tahu" dsb.
 	StatusMenikah       string `gorm:"type:varchar(32)" json:"statusMenikah"`
 	Kewarganegaraan     string `gorm:"type:varchar(32)" json:"kewarganegaraan"`
 	IbuKandung          string `gorm:"type:varchar(255)" json:"ibuKandung"`

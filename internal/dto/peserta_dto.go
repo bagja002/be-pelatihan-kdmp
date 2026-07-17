@@ -15,7 +15,7 @@ type CreatePesertaRequest struct {
 	TanggalLahir        string `json:"tanggalLahir" validate:"omitempty,max=32"`
 	JenisKelamin        string `json:"jenisKelamin" validate:"omitempty,max=32"`
 	Pekerjaan           string `json:"pekerjaan" validate:"omitempty,max=128"`
-	GolonganDarah       string `json:"golonganDarah" validate:"omitempty,max=8"`
+	GolonganDarah       string `json:"golonganDarah" validate:"omitempty,max=32"`
 	StatusMenikah       string `json:"statusMenikah" validate:"omitempty,max=32"`
 	Kewarganegaraan     string `json:"kewarganegaraan" validate:"omitempty,max=32"`
 	IbuKandung          string `json:"ibuKandung" validate:"omitempty,max=255"`
@@ -49,7 +49,7 @@ type UpdateSelfRequest struct {
 	TanggalLahir        string `json:"tanggalLahir" validate:"omitempty,max=32"`
 	JenisKelamin        string `json:"jenisKelamin" validate:"omitempty,max=32"`
 	Pekerjaan           string `json:"pekerjaan" validate:"omitempty,max=128"`
-	GolonganDarah       string `json:"golonganDarah" validate:"omitempty,max=8"`
+	GolonganDarah       string `json:"golonganDarah" validate:"omitempty,max=32"`
 	StatusMenikah       string `json:"statusMenikah" validate:"omitempty,max=32"`
 	Kewarganegaraan     string `json:"kewarganegaraan" validate:"omitempty,max=32"`
 	IbuKandung          string `json:"ibuKandung" validate:"omitempty,max=255"`
