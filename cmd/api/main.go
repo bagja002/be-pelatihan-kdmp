@@ -78,14 +78,19 @@ func main() {
 		Format: "[${time}] ${ip} ${status} ${method} ${path} rid=${locals:requestid} ${latency}\n",
 	}))
 
-	// Global rate limiter (per IP) against abuse / DoS at the app layer.
-	app.Use(limiter.New(limiter.Config{
-		Max:        cfg.RateLimitMax,
-		Expiration: cfg.RateLimitWindow,
-		LimitReached: func(c *fiber.Ctx) error {
-			return response.TooManyRequests(c, "rate limit exceeded")
-		},
-	}))
+	// Global rate limiter (per IP). Nonaktif bila RATE_LIMIT_MAX <= 0 —
+	// di belakang reverse proxy semua klien terlihat 1 IP sehingga limiter
+	// per-IP justru memblokir massal; aktifkan lagi hanya bila proxy sudah
+	// meneruskan IP asli (X-Forwarded-For) dan Fiber dikonfigurasi membacanya.
+	if cfg.RateLimitMax > 0 {
+		app.Use(limiter.New(limiter.Config{
+			Max:        cfg.RateLimitMax,
+			Expiration: cfg.RateLimitWindow,
+			LimitReached: func(c *fiber.Ctx) error {
+				return response.TooManyRequests(c, "rate limit exceeded")
+			},
+		}))
+	}
 
 	store := storage.New(cfg.UploadDir, cfg.MaxUploadBytes)
 	// Store terpisah untuk bahan ajar: root sama, batas ukuran lebih besar.

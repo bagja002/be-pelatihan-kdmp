@@ -1,17 +1,13 @@
 package router
 
 import (
-	"time"
-
 	"knmp-backend/internal/handler"
 	"knmp-backend/internal/middleware"
 	"knmp-backend/internal/repository"
 	"knmp-backend/internal/service"
 	"knmp-backend/internal/storage"
-	"knmp-backend/pkg/response"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"gorm.io/gorm"
 )
 
@@ -21,22 +17,16 @@ func newPelatihHandler(db *gorm.DB, store *storage.Store) *handler.PelatihHandle
 	return handler.NewPelatihHandler(svc, store)
 }
 
-// RegisterPelatihPublicRoutes: registrasi mandiri (publik, rate-limit ketat).
+// RegisterPelatihPublicRoutes: registrasi mandiri (publik).
+// Rate limit sengaja dilepas: di belakang reverse proxy semua klien terlihat
+// satu IP, sehingga limiter per-IP memblokir massal (429) saat ramai.
 func RegisterPelatihPublicRoutes(api fiber.Router, db *gorm.DB, store *storage.Store) {
 	h := newPelatihHandler(db, store)
 
-	strict := limiter.New(limiter.Config{
-		Max:        10,
-		Expiration: time.Minute,
-		LimitReached: func(c *fiber.Ctx) error {
-			return response.TooManyRequests(c, "terlalu banyak percobaan, coba lagi nanti")
-		},
-	})
-
 	group := api.Group("/pelatih")
-	group.Post("/register", strict, h.Register)
-	group.Post("/lookup", strict, h.Lookup)  // cari data by NIP (edit mandiri)
-	group.Put("/self", strict, h.UpdateSelf) // perbarui data sendiri by NIP
+	group.Post("/register", h.Register)
+	group.Post("/lookup", h.Lookup)  // cari data by NIP (edit mandiri)
+	group.Put("/self", h.UpdateSelf) // perbarui data sendiri by NIP
 }
 
 // RegisterPelatihAdminRoutes: kelola pelatih untuk admin/super_admin.
