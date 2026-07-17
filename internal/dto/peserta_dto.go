@@ -9,7 +9,7 @@ type CreatePesertaRequest struct {
 	Email               string `json:"email" validate:"omitempty,email,max=255"`
 	Provinsi            string `json:"provinsi" validate:"omitempty,max=128"`
 	Kota                string `json:"kota" validate:"omitempty,max=128"`
-	Kecamatan           string `json:"kecamatan" validate:"omitempty,max=16"`
+	Kecamatan           string `json:"kecamatan" validate:"omitempty,max=128"`
 	Alamat              string `json:"alamat" validate:"omitempty,max=512"`
 	TempatLahir         string `json:"tempatLahir" validate:"omitempty,max=128"`
 	TanggalLahir        string `json:"tanggalLahir" validate:"omitempty,max=32"`
@@ -43,7 +43,7 @@ type UpdateSelfRequest struct {
 	Email               string `json:"email" validate:"omitempty,email,max=255"`
 	Provinsi            string `json:"provinsi" validate:"omitempty,max=128"`
 	Kota                string `json:"kota" validate:"omitempty,max=128"`
-	Kecamatan           string `json:"kecamatan" validate:"omitempty,max=16"`
+	Kecamatan           string `json:"kecamatan" validate:"omitempty,max=128"`
 	Alamat              string `json:"alamat" validate:"omitempty,max=512"`
 	TempatLahir         string `json:"tempatLahir" validate:"omitempty,max=128"`
 	TanggalLahir        string `json:"tanggalLahir" validate:"omitempty,max=32"`

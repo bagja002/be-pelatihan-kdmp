@@ -20,7 +20,7 @@ type DataPeserta struct {
 	Email               string `gorm:"type:varchar(255)" json:"email"`
 	Provinsi            string `gorm:"type:varchar(128)" json:"provinsi"`
 	Kota                string `gorm:"type:varchar(128)" json:"kota"`
-	Kecamatan           string `gorm:"type:varchar(16)" json:"kecamatan"`
+	Kecamatan           string `gorm:"type:varchar(128)" json:"kecamatan"` // nama kecamatan (dulu kode, karenanya sempat varchar(16))
 	Alamat              string `gorm:"type:varchar(512)" json:"alamat"`
 	TempatLahir         string `gorm:"type:varchar(128)" json:"tempatLahir"`
 	TanggalLahir        string `gorm:"type:varchar(32)" json:"tanggalLahir"`
