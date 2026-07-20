@@ -76,6 +76,7 @@ func RowToPeserta(row map[string]string) (*entity.DataPeserta, error) {
 		Alamat:              get(row, "alamat"),
 		Provinsi:            get(row, "provinsi_by_nik", "provinsibynik", "provinsi"),
 		Kota:                get(row, "kotakab_by_nik", "kotakabbynik", "kota"),
+		Kecamatan:           get(row, "kecamatan"),
 		TempatLahir:         get(row, "tempat_lahir", "tempatlahir"),
 		TanggalLahir:        ParseTanggalLahir(get(row, "tanggal_lahir", "tanggallahir")),
 		JenisKelamin:        get(row, "jenis_kelamin", "jeniskelamin"),
